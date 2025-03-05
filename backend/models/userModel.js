@@ -9,8 +9,9 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
     email: {
-      type: string,
+      type: String,
       required: true,
+      unique: true,
       validator: (value) => {
         if (!validator.isEmail(value)) {
           throw new Error({ error: "Invalid Email address" });
@@ -20,17 +21,13 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+      minLength: 7,
     },
     pic: {
       type: String,
       required: true,
       default:
         "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
-    },
-    isAdmin: {
-      type: Boolean,
-      required: true,
-      default: false,
     },
   },
   {
