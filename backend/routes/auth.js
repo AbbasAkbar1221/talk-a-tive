@@ -1,10 +1,14 @@
 const express = require('express');
 const router = express.Router();
 
-const authController = require('../controllers/auth');
+const {registerUser, loginUser, logoutUser, upload} = require('../controllers/auth');
 
-router.post('/register', authController.registerUser);
-router.post('/login', authController.loginUser);
-router.post('/logout', authController.logoutUser);
+if (!upload) {
+    console.error("Error: `upload` is not defined in authController.js");
+  }
+
+router.post('/register', upload.single("pic"), registerUser);
+router.post('/login', loginUser);
+router.post('/logout', logoutUser);
 
 module.exports = router;

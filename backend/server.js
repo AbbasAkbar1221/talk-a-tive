@@ -5,8 +5,10 @@ const app = express();
 require("./config/connection");
 const cors = require("cors");
 const authRoutes = require("./routes/auth");
+const path = require("path");
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 app.get("/", (req, res) => {
@@ -23,6 +25,7 @@ app.get("/api/chats/:id", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {

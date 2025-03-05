@@ -12,6 +12,8 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      trim: true,
+      lowercase: true,
       validator: (value) => {
         if (!validator.isEmail(value)) {
           throw new Error({ error: "Invalid Email address" });
@@ -25,7 +27,6 @@ const userSchema = new mongoose.Schema(
     },
     pic: {
       type: String,
-      required: true,
       default:
         "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
     },
