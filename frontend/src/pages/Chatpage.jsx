@@ -7,7 +7,11 @@ const Chatpage = () => {
   const [chats, setChats] = useState([]);
   const fetchChats = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/api/chats`);
+      const response = await axios.get(`${BACKEND_URL}/api/chats`,{
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       console.log(response.data);
       setChats(response.data);
     } catch (error) {

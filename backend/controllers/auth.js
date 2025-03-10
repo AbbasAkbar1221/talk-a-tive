@@ -1,37 +1,36 @@
-require("dotenv").config();
-
 const User = require("../models/userModel");
-
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const multer = require("multer");
-const path = require("path");
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(path.dirname(__dirname), "uploads"));
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "--" + file.originalname);
-  },
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-  const isValid = allowedTypes.includes(file.mimetype);
+// Configure Cloudinary storage for Multer
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "chat-app-profiles",
+    allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
+    transformation: [{ width: 500, height: 500, crop: "limit" }]
+  }
+});
 
-  cb(isValid ? null : new Error("Invalid file type. Only images are allowed."), isValid);
-};
-
+// Setup Multer with Cloudinary storage
 const upload = multer({ 
   storage: storage,
-  fileFilter: fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024 
   }
 });
 
-const registerUser = async(req, res) =>{
+const registerUser = async(req, res) => {
   try {
     const { name, password, email, confirmPassword } = req.body;
     if (!name || !password || !email || !confirmPassword) {
@@ -46,14 +45,17 @@ const registerUser = async(req, res) =>{
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
+    
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    const pic = req.file ? req.file.filename : ""; 
+    
+    const picUrl = req.file ? req.file.path : "";
+    
     const user = new User({
       name,
       email,
       password: hashedPassword,
-      pic,
+      pic: picUrl, 
     });
     
     await user.save();
@@ -83,9 +85,14 @@ const loginUser = async(req, res) => {
 
   const token = generateToken(token_data);
 
-  return res.json({ token });
+res.json({
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  pic: user.pic,
+  token
+});
 }
-
 function generateToken(data) {
   return jwt.sign(data, process.env.ACCESS_TOKEN_SECRET, {
     expiresIn: "1d",
@@ -94,5 +101,9 @@ function generateToken(data) {
 const logoutUser = async (req, res) => {
     return res.status(200).json({ message: 'User logged out successfully!' });
 };
-
-module.exports = { registerUser, loginUser, logoutUser, upload };
+module.exports = { 
+  registerUser,
+  loginUser,
+  logoutUser,
+  upload
+};
