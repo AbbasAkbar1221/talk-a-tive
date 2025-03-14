@@ -1,36 +1,20 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useEffect } from "react";
+import { ChatState } from "../context/ChatContext";
+import SideDrawer from "../components/Chats/SideDrawer";
+import MyChats from "../components/Chats/MyChats";
+import ChatBox from "../components/Chats/ChatBox";
 
 const Chatpage = () => {
-  const BACKEND_URL = import.meta.env.VITE_API_URL;
+  const {user} = ChatState();
   const [chats, setChats] = useState([]);
-  const fetchChats = async () => {
-    try {
-      const response = await axios.get(`${BACKEND_URL}/api/chats`,{
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      console.log(response.data);
-      setChats(response.data);
-    } catch (error) {
-        console.error(error);
-    }
-  };
 
-  useEffect(() => {
-    fetchChats();
-  }, [])
-  
-  return <div>
-        <h1>Chatpage</h1>
-        <div>
-            {chats.map((chat) => (
-                <div key={chat._id}>
-                    <h2>{chat.chatName}</h2>
-                </div>
-            ))}
+  return <div style={{ width: "100%"}}>
+        {user && <SideDrawer/>}
+        <div className="flex justify-between w-[100%] h-[91vh] p-10">
+          {user && <MyChats/>}
+          {user && <ChatBox/>}
         </div>
   </div>;
 };

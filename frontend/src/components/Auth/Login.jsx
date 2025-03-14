@@ -36,6 +36,7 @@ const Login = () => {
             placeholder="Email"
             className="w-full p-2 border border-gray-300 rounded"
             onChange={handleChange}
+            autoComplete="email"
             required
           />
           <input
@@ -44,6 +45,7 @@ const Login = () => {
             placeholder="Password"
             className="w-full p-2 border border-gray-300 rounded"
             onChange={handleChange}
+            autoComplete="current-password"
             required
           />
           <button

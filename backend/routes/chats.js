@@ -11,13 +11,4 @@ router.put('/group/rename', renameGroup);
 router.put('/group/remove', removeUserFromGroup);
 router.put('/group/add', addUserToGroup);
 
-// router.get("/", (req, res) => {
-//   res.send(chats);
-// });
-
-// router.get("/:id", (req, res) => {
-//   const singleChat = chats.find((chat) => chat._id === req.params.id);
-//   res.send(singleChat);
-// });
-
 module.exports = router;

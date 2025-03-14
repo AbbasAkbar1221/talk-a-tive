@@ -80,7 +80,7 @@ const loginUser = async(req, res) => {
     return res.status(500).json({ message: error.message });
   }
 
-  const userInfo = { _id: user.id, name: user.name };
+  const userInfo = { _id: user.id, name: user.name, email: user.email, pic: user.pic };
   const token_data = { userInfo };
 
   const token = generateToken(token_data);

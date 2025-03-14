@@ -12,4 +12,15 @@ const allUsers = async (req, res) => {
     res.json(users);
 };
 
-module.exports = { allUsers };
+async function fetchUserDetails (req, res){
+  try {
+    const user = req.user;
+    res.json(user);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+}
+
+module.exports = { allUsers, fetchUserDetails };
