@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AiOutlineSearch, AiOutlineBell } from "react-icons/ai";
 import { IoMdClose } from "react-icons/io";
 import { ChatState } from "../../context/ChatContext";
@@ -17,6 +17,7 @@ const SideDrawer = () => {
   const [loadingChat, setLoadingChat] = useState(false);
   const { user, setSelectedChat, chats, setChats, logout } = ChatState();
   const navigate = useNavigate();
+  const dropDownRef = useRef(null);
 
   const handleLogout = () => {
     logout();
@@ -76,6 +77,23 @@ const SideDrawer = () => {
     }
   };
 
+ useEffect(() => {
+   const handleClickOutside = (e) => {
+      if(dropDownRef.current && !dropDownRef.current.contains(e.target)){
+        setShowDropdown(false);
+      }
+   }
+
+   if(showDropdown){
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+ 
+   return () => {
+     document.removeEventListener('mousedown', handleClickOutside);
+   }
+ }, [showDropdown])
+ 
+
   return (
     <>
       {/* Header */}
@@ -100,8 +118,7 @@ const SideDrawer = () => {
         {/* Notifications & Profile */}
         <div className="flex items-center gap-4 relative">
           <AiOutlineBell className="text-gray-600 cursor-pointer" size={24} />
-          {/* Profile Avatar & Dropdown */}
-          <div className="relative">
+          <div className="relative" ref={dropDownRef}>
             <img
               src={user?.pic   || "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"}
               alt="User Avatar"
@@ -133,10 +150,8 @@ const SideDrawer = () => {
 
       {/* Side Drawer */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex">
-          {/* Drawer Content */}
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-xs flex">
           <div className="w-80 bg-white h-full p-4 shadow-lg">
-            {/* Drawer Header */}
             <div className="flex justify-between items-center border-b pb-2">
               <h2 className="text-lg font-semibold">Search Users</h2>
               <IoMdClose
@@ -163,7 +178,6 @@ const SideDrawer = () => {
               </button>
             </div>
 
-            {/* Search Results Below the Search Button */}
             <div className="mt-4">
               {loading ? (
                 <p className="text-center text-gray-500">Loading...</p>
@@ -185,8 +199,6 @@ const SideDrawer = () => {
           </div>
         </div>
       )}
-
-      {/* Profile Modal */}
       {isProfileOpen && (
         <ProfileModal user={user} onClose={() => setIsProfileOpen(false)} />
       )}
