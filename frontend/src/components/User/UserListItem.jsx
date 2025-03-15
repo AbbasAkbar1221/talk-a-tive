@@ -5,7 +5,7 @@ const UserListItem = ({ user, handleFunction }) => {
         onClick={handleFunction}
       >
         <img
-          src={user?.pic}
+          src={user?.pic || "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"}
           alt="User Avatar"
           className="w-10 h-10 rounded-full"
         />

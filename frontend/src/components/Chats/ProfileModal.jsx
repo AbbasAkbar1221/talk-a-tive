@@ -13,7 +13,7 @@ const ProfileModal = ({ user, onClose }) => {
         </div>
 
         <div className="flex flex-col items-center mt-4">
-          <img src={user.pic} alt="Profile" className="w-24 h-24 rounded-full border" />
+          <img src={user.pic   || "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"} alt="Profile" className="w-24 h-24 rounded-full border" />
           <h3 className="text-xl font-medium mt-2">{user.name}</h3>
           <p className="text-gray-600">{user.email}</p>
         </div>

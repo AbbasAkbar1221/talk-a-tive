@@ -1,24 +1,29 @@
-import React, { useEffect } from 'react'
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChatState } from '../context/ChatContext';
+import { useEffect } from 'react';
+
 const HomePage = () => {
   const navigate = useNavigate();
-  const { user } = ChatState(); 
+  const { user, isLoading } = ChatState();
 
   useEffect(() => {
-    if (user === undefined) return; 
+    if (isLoading) return; 
 
     if (user) {
       navigate('/chats');
     } else {
       navigate('/login');
     }
-  }, [user, navigate]);
+  }, [user, navigate, isLoading]);
 
   return (
     <div className="flex justify-center items-center h-screen">
-      <div>Redirecting...</div>
+      <div className="text-lg">
+        {isLoading ? "Loading..." : "Redirecting..."}
+      </div>
     </div>
   );
 };
-export default HomePage
+
+export default HomePage;

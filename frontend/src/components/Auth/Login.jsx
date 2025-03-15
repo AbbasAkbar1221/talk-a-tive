@@ -1,12 +1,14 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { ChatState } from "../../context/ChatContext";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const BACKEND_URL = import.meta.env.VITE_API_URL;
+  const { fetchUserDetails } = ChatState();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -18,6 +20,7 @@ const Login = () => {
     try {
       const res = await axios.post(`${BACKEND_URL}/api/auth/login`, formData);
       localStorage.setItem("token", res.data.token);
+      fetchUserDetails();
       navigate("/");
     } catch (err) {
       setError(err.response?.data?.message || "Invalid credentials");

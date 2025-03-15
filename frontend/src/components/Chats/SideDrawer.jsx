@@ -15,11 +15,11 @@ const SideDrawer = () => {
   const [loading, setLoading] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [loadingChat, setLoadingChat] = useState(false);
-  const { user, setSelectedChat, chats, setChats } = ChatState();
+  const { user, setSelectedChat, chats, setChats, logout } = ChatState();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    logout();
     navigate("/login");
   };
 
@@ -103,7 +103,7 @@ const SideDrawer = () => {
           {/* Profile Avatar & Dropdown */}
           <div className="relative">
             <img
-              src={user?.pic}
+              src={user?.pic   || "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"}
               alt="User Avatar"
               className="w-10 h-10 rounded-full cursor-pointer"
               onClick={() => setShowDropdown(!showDropdown)}
