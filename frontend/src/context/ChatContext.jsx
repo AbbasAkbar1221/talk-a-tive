@@ -5,7 +5,7 @@ import io from "socket.io-client";
 const ChatContext = createContext();
 
 const ChatProvider = ({ children }) => {
-  const [user, setUser] = useState(undefined);
+  const [user, setUser] = useState(null);
   const [selectedChat, setSelectedChat] = useState(null);
   const [chats, setChats] = useState([]);
   const [socket, setSocket] = useState(null);

@@ -21,7 +21,6 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
-  const { user } = ChatState();
   return (
     <div>
       <Routes>
