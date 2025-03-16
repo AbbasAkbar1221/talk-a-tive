@@ -22,10 +22,6 @@ const io = require('socket.io')(server, {
   }
 });
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
-
 app.use("/api/auth", authRoutes);
 
 app.use(authenticateToken);
@@ -35,12 +31,6 @@ app.use('/api/messages', messageRoutes);
 
 
 const PORT = process.env.PORT;
-// app.listen(PORT, () => {
-//   console.log(`Server is running on port ${PORT}`);
-// });
-
-
-
 
 io.on('connection', (socket) => {
   console.log('A user connected');
@@ -78,9 +68,6 @@ io.on('connection', (socket) => {
   });
 });
 
-// Change this line:
-// app.listen(PORT, () => {...})
-// To this:
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
