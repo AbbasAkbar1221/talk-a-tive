@@ -7,8 +7,34 @@ import GroupChatModal from "./GroupChatModal";
 const MyChats = forwardRef((props, ref) => {
   const [loading, setLoading] = useState(true);
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
-  const { user, selectedChat, setSelectedChat, chats, setChats } = ChatState();
+  const { user, selectedChat, setSelectedChat, chats, setChats, socket } = ChatState();
   const BACKEND_URL = import.meta.env.VITE_API_URL;
+
+useEffect(() => {
+  if (socket) {
+    const handleGroupRenamed = (updatedChat) => {
+      setSelectedChat((prevChat) => {
+        if (prevChat && prevChat._id === updatedChat._id) {
+          return updatedChat;
+        }
+        return prevChat;
+      });
+
+      setChats((prevChats) => {
+        if (!prevChats) return [];
+        return prevChats.map((chat) =>
+          chat?._id === updatedChat?._id ? { ...chat, ...updatedChat } : chat
+        );
+      });
+    };
+
+    socket.on("group renamed", handleGroupRenamed);
+    
+    return () => {
+      socket.off("group renamed", handleGroupRenamed);
+    };
+  }
+}, [socket, setSelectedChat, setChats]);
 
   const fetchChats = async () => {
     try {
@@ -35,7 +61,6 @@ const MyChats = forwardRef((props, ref) => {
     fetchChats();
   }, []);
 
-  // Function to get other user's name in 1-on-1 chat
   const getSenderName = (chat) => {
     if (!chat.users || chat.users.length === 0) return "Unknown User";
     return chat.users[0]._id === user._id
@@ -72,16 +97,16 @@ const MyChats = forwardRef((props, ref) => {
             >
               <div>
                 {chat.isGroupChat ? (
-                  <p className="font-medium">{chat.chatName}</p>
+                  <p className="font-medium">{chat?.chatName || "Unnamed Group" }</p>
                 ) : (
                   <p className="font-medium">{getSenderName(chat)}</p>
                 )}
                 {chat.latestMessage && (
                   <p className={`text-sm truncate ${selectedChat?._id === chat._id ? "text-blue-100" : "text-gray-500"}`}>
                     <span className="font-medium">
-                      {chat.latestMessage.sender.name === user.name ? "You: " : `${chat.latestMessage.sender.name}: `}
+                      {chat.latestMessage?.sender?.name === user.name ? "You: " : `${chat.latestMessage?.sender?.name || "Unknown"}: `}
                     </span>
-                    {chat.latestMessage.content}
+                    {chat.latestMessage?.content || ""}
                   </p>
                 )}
               </div>
@@ -92,7 +117,6 @@ const MyChats = forwardRef((props, ref) => {
         )}
       </div>
       
-      {/* Group Chat Modal */}
       <GroupChatModal 
         isOpen={isGroupModalOpen} 
         onClose={() => setIsGroupModalOpen(false)} 

@@ -1,103 +1,162 @@
-import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import { ChatState } from '../../context/ChatContext';
-import { BsArrowLeftCircle } from 'react-icons/bs';
-import { IoSend } from 'react-icons/io5';
-import io from 'socket.io-client';
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import { ChatState } from "../../context/ChatContext";
+import { BsArrowLeftCircle } from "react-icons/bs";
+import { IoSend } from "react-icons/io5";
+import io from "socket.io-client";
 
 const ChatBox = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
   const [socketConnected, setSocketConnected] = useState(false);
   const [typing, setTyping] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  
-  const { user, selectedChat, setSelectedChat } = ChatState();
+
+  const { user, selectedChat, setSelectedChat, socket, isLoading } = ChatState();
   const BACKEND_URL = import.meta.env.VITE_API_URL;
-  const socket = useRef();
   const messageEndRef = useRef(null);
-  
-  // Initialize socket
+  const [selectedChatName, setSelectedChatName] = useState("");
+
+  const token = localStorage.getItem("token");
+
+  if (isLoading || !socket) {
+    return <div>Connecting to chat server...</div>;
+  }
+
   useEffect(() => {
-    socket.current = io(BACKEND_URL);
     
-    socket.current.emit('setup', user);
-    socket.current.on('connected', () => setSocketConnected(true));
-    
-    socket.current.on('typing', () => setIsTyping(true));
-    socket.current.on('stop typing', () => setIsTyping(false));
-    
-    return () => {
-      socket.current.disconnect();
-    };
-  }, [user]);
-  
-  // Fetch messages when chat changes
-  useEffect(() => {
-    if (selectedChat) {
-      fetchMessages();
-      socket.current.emit('join chat', selectedChat._id);
+
+    if (socket && selectedChat) {
+      socket.on("connected", () => setSocketConnected(true));
+      socket.on("typing", () => setIsTyping(true));
+      socket.on("stop typing", () => setIsTyping(false));
+      socket.emit("join chat", selectedChat._id);
     }
     
+    return () => {
+      if (socket && selectedChat) {
+        socket.emit("stop typing", selectedChat._id);
+      }
+    };
+  }, [selectedChat, socket]);
+
+
+  // Fetch messages when chat changes
+  useEffect(() => {
+    if (socket && selectedChat) {
+      fetchMessages();
+      socket.emit("join chat", selectedChat._id);
+      // socket.current.emit("join chat", selectedChat._id);
+    }
+
     // Clean up typing indicator when chat changes
     return () => {
-      socket.current.emit('stop typing', selectedChat?._id);
+      if(socket && selectedChat) {
+        socket.emit("stop typing", selectedChat?._id);
+      }
+      // socket.current.emit("stop typing", selectedChat?._id);
     };
   }, [selectedChat]);
-  
+
   // Handle incoming messages
   useEffect(() => {
-    socket.current.on('message received', (newMessageReceived) => {
-      if (!selectedChat || selectedChat._id !== newMessageReceived.chat._id) {
-        // Handle notification
-      } else {
+    socket.on("message received", (newMessageReceived) => {
+    // socket.current.on("message received", (newMessageReceived) => {
+      if (selectedChat && selectedChat._id === newMessageReceived.chat._id) {
         setMessages((prevMessages) => [...prevMessages, newMessageReceived]);
       }
     });
   }, [selectedChat]);
-  
+
   // Scroll to bottom when messages change
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
   
+  const handleRenameGrp = async() => {
+    if (!selectedChat || !selectedChatName.trim()) return alert("Enter a valid group name");
+
+    try {
+      const config = {
+        headers : {
+          Authorization: `Bearer ${token}`
+        }
+      };
+
+      const { data } = await axios.put(`${BACKEND_URL}/api/chats/group/rename`, { 
+        chatId: selectedChat._id,
+        chatName: selectedChatName
+       }, config);
+       setSelectedChat(data);
+       setSelectedChatName("");
+       socket.emit("group renamed", data);
+      //  socket.current.emit("group renamed", data);
+    } catch (error) {
+      console.error("Error renaming group:", error);
+    }
+  };
+
+
+  useEffect(() => {
+    const handleGroupRenamed = (updatedChat) => {
+      setSelectedChat((prevChat) => {
+        if (prevChat && prevChat._id === updatedChat._id) {
+          return updatedChat;
+        }
+        return prevChat;
+      });
+    };
+
+    socket.on("group renamed", handleGroupRenamed);
+    // socket.current.on("group renamed", handleGroupRenamed);
+
+    return () => {
+      socket.off("group renamed", handleGroupRenamed);
+      // socket.current.off("group renamed", handleGroupRenamed);
+    };
+  
+  }, [socket]);
+
   const fetchMessages = async () => {
     if (!selectedChat) return;
-    
+
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem("token");
       const config = {
         headers: { Authorization: `Bearer ${token}` },
       };
-      
+
       const { data } = await axios.get(
         `${BACKEND_URL}/api/messages/${selectedChat._id}`,
         config
       );
-      
+
       setMessages(data);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      console.error("Error fetching messages:", error);
       setLoading(false);
     }
   };
-  
+
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
-    
-    socket.current.emit('stop typing', selectedChat._id);
-    
+
+    if(socket && selectedChat) {
+      socket.emit("stop typing", selectedChat._id);
+    }
+
     try {
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem("token");
       const config = {
         headers: { Authorization: `Bearer ${token}` },
       };
-      
-      setNewMessage('');
+
+      setNewMessage("");
       const { data } = await axios.post(
         `${BACKEND_URL}/api/messages`,
         {
@@ -106,53 +165,56 @@ const ChatBox = () => {
         },
         config
       );
-      
-      socket.current.emit('new message', data);
+
+      socket.emit("new message", data);
+      // socket.current.emit("new message", data);
       setMessages([...messages, data]);
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error("Error sending message:", error);
     }
   };
-  
+
   const typingHandler = (e) => {
     setNewMessage(e.target.value);
-    
+
     // Typing indicator logic
     if (!socketConnected) return;
-    
+
     if (!typing) {
       setTyping(true);
-      socket.current.emit('typing', selectedChat._id);
+      socket.emit("typing", selectedChat._id);
+      // socket.current.emit("typing", selectedChat._id);
     }
-    
+
     const lastTypingTime = new Date().getTime();
     const timerLength = 3000;
-    
+
     setTimeout(() => {
       const timeNow = new Date().getTime();
       const timeDiff = timeNow - lastTypingTime;
-      
+
       if (timeDiff >= timerLength && typing) {
-        socket.current.emit('stop typing', selectedChat._id);
+        socket.emit("stop typing", selectedChat._id);
+        // socket.current.emit("stop typing", selectedChat._id);
         setTyping(false);
       }
     }, timerLength);
   };
-  
+
   // Function to get other user's name in 1-on-1 chat
   const getSenderName = (chat) => {
     return chat.users[0]._id === user._id
       ? chat.users[1].name
       : chat.users[0].name;
   };
-  
+
   // Function to get other user's picture in 1-on-1 chat
   const getSenderPic = (chat) => {
     return chat.users[0]._id === user._id
       ? chat.users[1].pic
       : chat.users[0].pic;
   };
-  
+
   if (!selectedChat) {
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-lg">
@@ -160,37 +222,57 @@ const ChatBox = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="flex-1 flex flex-col bg-white rounded-lg shadow-md overflow-hidden ml-4">
       {/* Chat Header */}
       <div className="bg-gray-100 p-4 flex items-center justify-between border-b">
         <div className="flex items-center">
-          <button 
+          <button
             className="md:hidden mr-2 text-gray-600"
             onClick={() => setSelectedChat(null)}
           >
             <BsArrowLeftCircle size={24} />
           </button>
-          
+
           {selectedChat.isGroupChat ? (
             <div>
               <h3 className="font-semibold text-lg">{selectedChat.chatName}</h3>
-              <p className="text-xs text-gray-500">{selectedChat.users.length} members</p>
+              <input
+                type="text"
+                placeholder="Enter new group name"
+                className="border p-1 rounded-md mt-1"
+                value={selectedChatName}
+                onChange={(e) => setSelectedChatName(e.target.value)}
+              />
+              <button
+                className="bg-black text-white p-2 rounded-lg mt-2"
+                onClick={handleRenameGrp}
+              >
+                Rename
+              </button>
+              <p className="text-xs text-gray-500">
+                {selectedChat.users.length} members
+              </p>
             </div>
           ) : (
             <div className="flex items-center">
               <img
-                src={getSenderPic(selectedChat)  || "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"}
+                src={
+                  getSenderPic(selectedChat) ||
+                  "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"
+                }
                 alt="Profile"
                 className="w-10 h-10 rounded-full mr-3"
               />
-              <h3 className="font-semibold text-lg">{getSenderName(selectedChat)}</h3>
+              <h3 className="font-semibold text-lg">
+                {getSenderName(selectedChat)}
+              </h3>
             </div>
           )}
         </div>
       </div>
-      
+
       {/* Messages Area */}
       <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
         {loading ? (
@@ -203,25 +285,29 @@ const ChatBox = () => {
               <div
                 key={message._id}
                 className={`flex ${
-                  message.sender._id === user._id ? 'justify-end' : 'justify-start'
+                  message.sender._id === user._id
+                    ? "justify-end"
+                    : "justify-start"
                 }`}
               >
                 <div
                   className={`max-w-xs md:max-w-md lg:max-w-lg rounded-lg px-4 py-2 ${
                     message.sender._id === user._id
-                      ? 'bg-blue-500 text-white rounded-br-none'
-                      : 'bg-gray-200 text-gray-800 rounded-bl-none'
+                      ? "bg-blue-500 text-white rounded-br-none"
+                      : "bg-gray-200 text-gray-800 rounded-bl-none"
                   }`}
                 >
                   {message.content}
                   <div
                     className={`text-xs mt-1 ${
-                      message.sender._id === user._id ? 'text-blue-100' : 'text-gray-500'
+                      message.sender._id === user._id
+                        ? "text-blue-100"
+                        : "text-gray-500"
                     }`}
                   >
                     {new Date(message.createdAt).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
+                      hour: "2-digit",
+                      minute: "2-digit",
                     })}
                   </div>
                 </div>
@@ -241,7 +327,7 @@ const ChatBox = () => {
           </div>
         )}
       </div>
-      
+
       {/* Message Input */}
       <form onSubmit={sendMessage} className="p-4 border-t">
         <div className="flex items-center">

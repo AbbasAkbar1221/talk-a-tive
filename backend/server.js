@@ -61,6 +61,12 @@ io.on('connection', (socket) => {
   // Handle typing indicators
   socket.on('typing', (room) => socket.in(room).emit('typing'));
   socket.on('stop typing', (room) => socket.in(room).emit('stop typing'));
+
+  socket.on('group renamed', (updatedChat) => {
+    // socket.broadcast.emit('group renamed', updatedChat);
+    io.emit('group renamed', updatedChat);
+
+  });
   
   // Disconnect
   socket.on('disconnect', () => {

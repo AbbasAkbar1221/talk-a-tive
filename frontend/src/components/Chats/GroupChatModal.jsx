@@ -81,7 +81,7 @@ const GroupChatModal = ({ isOpen, onClose }) => {
   
   const handleUserSelect = (userToAdd) => {
     if (selectedUsers.some(user => user._id === userToAdd._id)) {
-      return; // User already selected
+      return; 
     }
     setSelectedUsers([...selectedUsers, userToAdd]);
   };
@@ -127,7 +127,6 @@ const GroupChatModal = ({ isOpen, onClose }) => {
             />
           </div>
           
-          {/* Selected Users */}
           <div className="flex flex-wrap gap-2 mb-4">
             {selectedUsers.map(user => (
               <UserBadgeItem 
@@ -138,7 +137,6 @@ const GroupChatModal = ({ isOpen, onClose }) => {
             ))}
           </div>
           
-          {/* Search Results */}
           <div className="max-h-40 overflow-y-auto mb-4">
             {loading ? (
               <div className="flex justify-center p-2">

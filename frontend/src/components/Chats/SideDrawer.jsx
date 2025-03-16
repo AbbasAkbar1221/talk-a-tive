@@ -96,9 +96,7 @@ const SideDrawer = () => {
 
   return (
     <>
-      {/* Header */}
       <div className="flex items-center justify-between bg-white p-4 shadow-md relative">
-        {/* Search Bar */}
         <div
           className="flex items-center gap-2 border rounded-lg px-3 py-2 cursor-pointer"
           onClick={() => setIsOpen(true)}
@@ -112,10 +110,8 @@ const SideDrawer = () => {
           />
         </div>
 
-        {/* Title */}
         <h1 className="text-xl font-semibold">Talk-A-Tive</h1>
 
-        {/* Notifications & Profile */}
         <div className="flex items-center gap-4 relative">
           <AiOutlineBell className="text-gray-600 cursor-pointer" size={24} />
           <div className="relative" ref={dropDownRef}>
@@ -148,7 +144,6 @@ const SideDrawer = () => {
         </div>
       </div>
 
-      {/* Side Drawer */}
       {isOpen && (
         <div className="fixed inset-0 bg-white/30 backdrop-blur-xs flex">
           <div className="w-80 bg-white h-full p-4 shadow-lg">
@@ -161,7 +156,6 @@ const SideDrawer = () => {
               />
             </div>
 
-            {/* Search Input */}
             <div className="mt-4">
               <input
                 type="text"

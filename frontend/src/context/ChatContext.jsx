@@ -15,8 +15,14 @@ const ChatProvider = ({ children }) => {
 
   useEffect(() => {
     if (user) {
+      setIsLoading(true);
       const newSocket = io(BACKEND_URL);
-      setSocket(newSocket);
+      newSocket.emit("setup", user);
+      // setSocket(newSocket);
+      newSocket.on("connected", () => {
+        setSocket(newSocket);
+        setIsLoading(false);
+      });
     }
   }, [user]);
 
@@ -29,7 +35,7 @@ const ChatProvider = ({ children }) => {
         setIsLoading(false);
         return;
       }
-      
+
       const userInfo = await axios.get(`${BACKEND_URL}/api/users/userdetails`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -61,18 +67,20 @@ const ChatProvider = ({ children }) => {
   };
 
   return (
-    <ChatContext.Provider value={{ 
-      user, 
-      setUser, 
-      selectedChat, 
-      setSelectedChat, 
-      chats, 
-      setChats, 
-      socket,
-      isLoading,
-      logout, 
-      fetchUserDetails 
-    }}>
+    <ChatContext.Provider
+      value={{
+        user,
+        setUser,
+        selectedChat,
+        setSelectedChat,
+        chats,
+        setChats,
+        socket,
+        isLoading,
+        logout,
+        fetchUserDetails,
+      }}
+    >
       {children}
     </ChatContext.Provider>
   );
