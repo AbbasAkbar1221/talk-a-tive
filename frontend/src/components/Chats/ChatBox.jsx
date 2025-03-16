@@ -3,7 +3,7 @@ import axios from "axios";
 import { ChatState } from "../../context/ChatContext";
 import { BsArrowLeftCircle } from "react-icons/bs";
 import { IoSend } from "react-icons/io5";
-import io from "socket.io-client";
+import { AiOutlineEdit } from "react-icons/ai";
 
 const ChatBox = () => {
   const [messages, setMessages] = useState([]);
@@ -13,10 +13,12 @@ const ChatBox = () => {
   const [typing, setTyping] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
 
-  const { user, selectedChat, setSelectedChat, socket, isLoading } = ChatState();
+  const { user, selectedChat, setSelectedChat, socket, isLoading } =
+    ChatState();
   const BACKEND_URL = import.meta.env.VITE_API_URL;
   const messageEndRef = useRef(null);
   const [selectedChatName, setSelectedChatName] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
   const token = localStorage.getItem("token");
 
@@ -25,15 +27,13 @@ const ChatBox = () => {
   }
 
   useEffect(() => {
-    
-
     if (socket && selectedChat) {
       socket.on("connected", () => setSocketConnected(true));
       socket.on("typing", () => setIsTyping(true));
       socket.on("stop typing", () => setIsTyping(false));
       socket.emit("join chat", selectedChat._id);
     }
-    
+
     return () => {
       if (socket && selectedChat) {
         socket.emit("stop typing", selectedChat._id);
@@ -41,28 +41,25 @@ const ChatBox = () => {
     };
   }, [selectedChat, socket]);
 
-
   // Fetch messages when chat changes
   useEffect(() => {
     if (socket && selectedChat) {
       fetchMessages();
       socket.emit("join chat", selectedChat._id);
-      // socket.current.emit("join chat", selectedChat._id);
     }
 
     // Clean up typing indicator when chat changes
     return () => {
-      if(socket && selectedChat) {
+      if (socket && selectedChat) {
         socket.emit("stop typing", selectedChat?._id);
       }
-      // socket.current.emit("stop typing", selectedChat?._id);
     };
   }, [selectedChat]);
 
   // Handle incoming messages
   useEffect(() => {
     socket.on("message received", (newMessageReceived) => {
-    // socket.current.on("message received", (newMessageReceived) => {
+      // socket.current.on("message received", (newMessageReceived) => {
       if (selectedChat && selectedChat._id === newMessageReceived.chat._id) {
         setMessages((prevMessages) => [...prevMessages, newMessageReceived]);
       }
@@ -74,30 +71,33 @@ const ChatBox = () => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  
-  const handleRenameGrp = async() => {
-    if (!selectedChat || !selectedChatName.trim()) return alert("Enter a valid group name");
+  const handleRenameGrp = async () => {
+    if (!selectedChat || !selectedChatName.trim())
+      return alert("Enter a valid group name");
 
     try {
       const config = {
-        headers : {
-          Authorization: `Bearer ${token}`
-        }
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       };
 
-      const { data } = await axios.put(`${BACKEND_URL}/api/chats/group/rename`, { 
-        chatId: selectedChat._id,
-        chatName: selectedChatName
-       }, config);
-       setSelectedChat(data);
-       setSelectedChatName("");
-       socket.emit("group renamed", data);
+      const { data } = await axios.put(
+        `${BACKEND_URL}/api/chats/group/rename`,
+        {
+          chatId: selectedChat._id,
+          chatName: selectedChatName,
+        },
+        config
+      );
+      setSelectedChat(data);
+      setSelectedChatName("");
+      socket.emit("group renamed", data);
       //  socket.current.emit("group renamed", data);
     } catch (error) {
       console.error("Error renaming group:", error);
     }
   };
-
 
   useEffect(() => {
     const handleGroupRenamed = (updatedChat) => {
@@ -116,7 +116,6 @@ const ChatBox = () => {
       socket.off("group renamed", handleGroupRenamed);
       // socket.current.off("group renamed", handleGroupRenamed);
     };
-  
   }, [socket]);
 
   const fetchMessages = async () => {
@@ -146,7 +145,7 @@ const ChatBox = () => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
-    if(socket && selectedChat) {
+    if (socket && selectedChat) {
       socket.emit("stop typing", selectedChat._id);
     }
 
@@ -249,11 +248,19 @@ const ChatBox = () => {
                 className="bg-black text-white p-2 rounded-lg mt-2"
                 onClick={handleRenameGrp}
               >
-                Rename
+                Rename Group
               </button>
-              <p className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500">
                 {selectedChat.users.length} members
-              </p>
+                <div>
+                  {selectedChat.users.map((user) => (
+                    <span key={user._id} className="text-xs">
+                      {user.name}
+                      {", "}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           ) : (
             <div className="flex items-center">
@@ -297,6 +304,17 @@ const ChatBox = () => {
                       : "bg-gray-200 text-gray-800 rounded-bl-none"
                   }`}
                 >
+                  {selectedChat.isGroupChat ? (
+                    message.sender._id !== user._id ? (
+                      <div className="text-xs font-semibold">
+                        {message.sender.name}
+                      </div>
+                    ) : (
+                      <div className="text-xs font-semibold">You</div>
+                    )
+                  ) : null}
+
+                  <div className="flex justify-end items-center gap-8">
                   {message.content}
                   <div
                     className={`text-xs mt-1 ${
@@ -309,6 +327,7 @@ const ChatBox = () => {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
+                  </div>
                   </div>
                 </div>
               </div>

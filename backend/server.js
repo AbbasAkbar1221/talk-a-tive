@@ -10,6 +10,7 @@ const chatsRoutes = require("./routes/chats");
 const messageRoutes = require("./routes/message");
 const http = require('http');
 const server = http.createServer(app);
+const Chat = require("./models/chatModel");
 
 
 app.use(express.json());
@@ -62,11 +63,27 @@ io.on('connection', (socket) => {
   socket.on('typing', (room) => socket.in(room).emit('typing'));
   socket.on('stop typing', (room) => socket.in(room).emit('stop typing'));
 
-  socket.on('group renamed', (updatedChat) => {
-    // socket.broadcast.emit('group renamed', updatedChat);
-    io.emit('group renamed', updatedChat);
+  // socket.on('group renamed', (updatedChat) => {
+  //   io.emit('group renamed', updatedChat);
 
+  // });
+
+  socket.on('group renamed', async (updatedChat) => {
+    try {
+      const fullChat = await Chat.findById(updatedChat._id)
+        .populate("users", "name email pic")
+        .populate("groupAdmin", "name email pic")
+        .populate({
+          path: "latestMessage",
+          populate: { path: "sender", select: "name email pic" } 
+        });
+  
+      io.emit('group renamed', fullChat); 
+    } catch (error) {
+      console.error("Error populating latestMessage:", error);
+    }
   });
+  
   
   // Disconnect
   socket.on('disconnect', () => {
