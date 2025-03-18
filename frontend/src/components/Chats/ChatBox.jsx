@@ -53,8 +53,6 @@ const ChatBox = () => {
       fetchMessages();
       socket.emit("join chat", selectedChat._id);
     }
-
-    // Clean up typing indicator when chat changes
     return () => {
       if (socket && selectedChat) {
         socket.emit("stop typing", selectedChat?._id);
@@ -146,7 +144,6 @@ const ChatBox = () => {
 
     try {
       setLoading(true);
-      // const token = localStorage.getItem("token");
       const config = {
         headers: { Authorization: `Bearer ${token}` },
       };
@@ -173,7 +170,6 @@ const ChatBox = () => {
     }
 
     try {
-      // const token = localStorage.getItem("token");
       const config = {
         headers: { Authorization: `Bearer ${token}` },
       };
@@ -199,13 +195,11 @@ const ChatBox = () => {
   const typingHandler = (e) => {
     setNewMessage(e.target.value);
 
-    // Typing indicator logic
     if (!socketConnected) return;
 
     if (!typing) {
       setTyping(true);
       socket.emit("typing", selectedChat._id);
-      // socket.current.emit("typing", selectedChat._id);
     }
 
     const lastTypingTime = new Date().getTime();
@@ -217,7 +211,6 @@ const ChatBox = () => {
 
       if (timeDiff >= timerLength && typing) {
         socket.emit("stop typing", selectedChat._id);
-        // socket.current.emit("stop typing", selectedChat._id);
         setTyping(false);
       }
     }, timerLength);
@@ -247,7 +240,7 @@ const ChatBox = () => {
 
   return (
     <div className="flex-1 flex flex-col bg-white rounded-lg shadow-md overflow-hidden ml-4">
-      {/* Chat Header */}
+      
       <div className="bg-gray-100 p-4 flex items-center justify-between border-b">
         <div className="flex items-center">
           <button

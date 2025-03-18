@@ -18,7 +18,6 @@ const ChatProvider = ({ children }) => {
       setIsLoading(true);
       const newSocket = io(BACKEND_URL);
       newSocket.emit("setup", user);
-      // setSocket(newSocket);
       newSocket.on("connected", () => {
         setSocket(newSocket);
         setIsLoading(false);
