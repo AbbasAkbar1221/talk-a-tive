@@ -13,9 +13,7 @@ const MyChats = forwardRef((props, ref) => {
 useEffect(() => {
   if (socket) {
     const handleGroupRenamed = (updatedChat) => {
-      console.log(updatedChat);
       setSelectedChat((prevChat) => {
-        console.log(prevChat);
         if (prevChat && prevChat._id === updatedChat._id) {
           return updatedChat;
         }

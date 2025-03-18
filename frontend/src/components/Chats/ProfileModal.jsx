@@ -4,7 +4,7 @@ const ProfileModal = ({ user, onClose }) => {
   if (!user) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-xs flex justify-center items-center">
       <div className="bg-white rounded-lg shadow-lg p-6 w-96">
 
         <div className="flex justify-between items-center border-b pb-2">

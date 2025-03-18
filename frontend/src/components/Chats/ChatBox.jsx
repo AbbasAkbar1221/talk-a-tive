@@ -3,7 +3,7 @@ import axios from "axios";
 import { ChatState } from "../../context/ChatContext";
 import { BsArrowLeftCircle } from "react-icons/bs";
 import { IoSend } from "react-icons/io5";
-import { AiOutlineEdit } from "react-icons/ai";
+import { AiOutlineEdit, AiOutlineCheck } from "react-icons/ai";
 
 const ChatBox = () => {
   const [messages, setMessages] = useState([]);
@@ -25,6 +25,12 @@ const ChatBox = () => {
   if (isLoading || !socket) {
     return <div>Connecting to chat server...</div>;
   }
+
+  useEffect(() => {
+    if (selectedChat) {
+      setSelectedChatName(selectedChat.chatName);
+    }
+  }, [selectedChat]);
 
   useEffect(() => {
     if (socket && selectedChat) {
@@ -58,22 +64,32 @@ const ChatBox = () => {
 
   // Handle incoming messages
   useEffect(() => {
-    socket.on("message received", (newMessageReceived) => {
-      // socket.current.on("message received", (newMessageReceived) => {
+    if (!socket) return;
+    
+    const handleMessageReceived = (newMessageReceived) => {
       if (selectedChat && selectedChat._id === newMessageReceived.chat._id) {
         setMessages((prevMessages) => [...prevMessages, newMessageReceived]);
       }
-    });
-  }, [selectedChat]);
+    };
+    
+    socket.on("message received", handleMessageReceived);
+    
+    return () => {
+      socket.off("message received", handleMessageReceived);
+    };
+  }, [selectedChat, socket]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+
   const handleRenameGrp = async () => {
-    if (!selectedChat || !selectedChatName.trim())
-      return alert("Enter a valid group name");
+    if (!selectedChat || !selectedChatName.trim()) {
+      alert("Enter a valid group name");
+      return;
+    }
 
     try {
       const config = {
@@ -90,16 +106,24 @@ const ChatBox = () => {
         },
         config
       );
+      
       setSelectedChat(data);
-      setSelectedChatName("");
-      socket.emit("group renamed", data);
-      //  socket.current.emit("group renamed", data);
+      setIsEditing(false);
+      
+      if (socket) {
+        socket.emit("group renamed", data);
+      }
+      
     } catch (error) {
       console.error("Error renaming group:", error);
+      alert("Failed to rename group");
+      setSelectedChatName(selectedChat.chatName);
     }
   };
 
+
   useEffect(() => {
+    if (!socket) return;
     const handleGroupRenamed = (updatedChat) => {
       setSelectedChat((prevChat) => {
         if (prevChat && prevChat._id === updatedChat._id) {
@@ -110,13 +134,12 @@ const ChatBox = () => {
     };
 
     socket.on("group renamed", handleGroupRenamed);
-    // socket.current.on("group renamed", handleGroupRenamed);
 
     return () => {
       socket.off("group renamed", handleGroupRenamed);
-      // socket.current.off("group renamed", handleGroupRenamed);
     };
   }, [socket]);
+
 
   const fetchMessages = async () => {
     if (!selectedChat) return;
@@ -236,27 +259,46 @@ const ChatBox = () => {
 
           {selectedChat.isGroupChat ? (
             <div>
-              <h3 className="font-semibold text-lg">{selectedChat.chatName}</h3>
-              <input
-                type="text"
-                placeholder="Enter new group name"
-                className="border p-1 rounded-md mt-1"
-                value={selectedChatName}
-                onChange={(e) => setSelectedChatName(e.target.value)}
-              />
-              <button
-                className="bg-black text-white p-2 rounded-lg mt-2"
-                onClick={handleRenameGrp}
-              >
-                Rename Group
-              </button>
+              {isEditing ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    className="border p-1 rounded-md"
+                    value={selectedChatName}
+                    onChange={(e) => setSelectedChatName(e.target.value)}
+                    onBlur={handleRenameGrp}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleRenameGrp();
+                      }
+                    }}
+                    autoFocus
+                  />
+                  <button onClick={handleRenameGrp}>
+                    <AiOutlineCheck
+                      className="text-blue-500 cursor-pointer"
+                      size={20}
+                    />
+                  </button>
+                </div>
+              ) : (
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  {selectedChat?.chatName || "Group Chat"}
+                  <AiOutlineEdit
+                    className="cursor-pointer text-gray-500 hover:text-black"
+                    onClick={() => setIsEditing(true)}
+                    size={18}
+                  />
+                </h3>
+              )}
+
               <div className="text-xs text-gray-500">
                 {selectedChat.users.length} members
                 <div>
-                  {selectedChat.users.map((user) => (
-                    <span key={user._id} className="text-xs">
-                      {user.name}
-                      {", "}
+                  {selectedChat.users.map((u, index) => (
+                    <span key={u._id} className="text-xs">
+                      {u._id === user._id ? "You" : u.name}
+                        {index === selectedChat.users.length - 1 ? "" : ", "}
                     </span>
                   ))}
                 </div>
@@ -315,19 +357,19 @@ const ChatBox = () => {
                   ) : null}
 
                   <div className="flex justify-end items-center gap-8">
-                  {message.content}
-                  <div
-                    className={`text-xs mt-1 ${
-                      message.sender._id === user._id
-                        ? "text-blue-100"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {new Date(message.createdAt).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </div>
+                    {message.content}
+                    <div
+                      className={`text-xs mt-1 ${
+                        message.sender._id === user._id
+                          ? "text-blue-100"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {new Date(message.createdAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>

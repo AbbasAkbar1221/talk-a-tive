@@ -145,7 +145,7 @@ const SideDrawer = () => {
       </div>
 
       {isOpen && (
-        <div className="fixed inset-0 bg-white/30 backdrop-blur-xs flex">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-xs flex">
           <div className="w-80 bg-white h-full p-4 shadow-lg">
             <div className="flex justify-between items-center border-b pb-2">
               <h2 className="text-lg font-semibold">Search Users</h2>
