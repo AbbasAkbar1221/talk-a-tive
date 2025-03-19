@@ -77,22 +77,21 @@ const SideDrawer = () => {
     }
   };
 
- useEffect(() => {
-   const handleClickOutside = (e) => {
-      if(dropDownRef.current && !dropDownRef.current.contains(e.target)){
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropDownRef.current && !dropDownRef.current.contains(e.target)) {
         setShowDropdown(false);
       }
-   }
+    };
 
-   if(showDropdown){
-      document.addEventListener('mousedown', handleClickOutside);
+    if (showDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
     }
- 
-   return () => {
-     document.removeEventListener('mousedown', handleClickOutside);
-   }
- }, [showDropdown])
- 
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDropdown]);
 
   return (
     <>
@@ -116,7 +115,10 @@ const SideDrawer = () => {
           <AiOutlineBell className="text-gray-600 cursor-pointer" size={24} />
           <div className="relative" ref={dropDownRef}>
             <img
-              src={user?.pic   || "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"}
+              src={
+                user?.pic ||
+                "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"
+              }
               alt="User Avatar"
               className="w-10 h-10 rounded-full cursor-pointer"
               onClick={() => setShowDropdown(!showDropdown)}
@@ -146,7 +148,7 @@ const SideDrawer = () => {
 
       {isOpen && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-xs flex">
-          <div className="w-80 bg-white h-full p-4 shadow-lg">
+          <div className="w-full max-w-md bg-white h-full p-4 shadow-lg">
             <div className="flex justify-between items-center border-b pb-2">
               <h2 className="text-lg font-semibold">Search Users</h2>
               <IoMdClose
@@ -172,7 +174,7 @@ const SideDrawer = () => {
               </button>
             </div>
 
-            <div className="mt-4">
+            <div className="mt-4 max-h-[calc(100vh-250px)] overflow-y-auto">
               {loading ? (
                 <p className="text-center text-gray-500">Loading...</p>
               ) : (

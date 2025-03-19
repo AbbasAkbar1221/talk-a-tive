@@ -5,15 +5,21 @@ const ProfileModal = ({ user, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-xs flex justify-center items-center">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-96">
-
+      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
         <div className="flex justify-between items-center border-b pb-2">
           <h2 className="text-lg font-semibold">Profile</h2>
           <IoMdClose size={24} className="cursor-pointer" onClick={onClose} />
         </div>
 
         <div className="flex flex-col items-center mt-4">
-          <img src={user.pic   || "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"} alt="Profile" className="w-24 h-24 rounded-full border" />
+          <img
+            src={
+              user.pic ||
+              "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"
+            }
+            alt="Profile"
+            className="w-24 h-24 rounded-full border"
+          />
           <h3 className="text-xl font-medium mt-2">{user.name}</h3>
           <p className="text-gray-600">{user.email}</p>
         </div>

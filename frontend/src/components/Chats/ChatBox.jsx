@@ -23,7 +23,7 @@ const ChatBox = () => {
   const token = localStorage.getItem("token");
 
   if (isLoading || !socket) {
-    return <div>Connecting to chat server...</div>;
+    return <div className="flex-1 flex items-center justify-center p-4">Connecting to chat server...</div>;
   }
 
   useEffect(() => {
@@ -185,7 +185,6 @@ const ChatBox = () => {
       );
 
       socket.emit("new message", data);
-      // socket.current.emit("new message", data);
       setMessages([...messages, data]);
     } catch (error) {
       console.error("Error sending message:", error);
@@ -232,17 +231,17 @@ const ChatBox = () => {
 
   if (!selectedChat) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-lg">
+      <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-lg p-4">
         <p className="text-gray-500">Select a chat to start messaging</p>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white rounded-lg shadow-md overflow-hidden ml-4">
+    <div className="flex-1 flex flex-col bg-white rounded-lg shadow-md overflow-hidden h-full">
       
-      <div className="bg-gray-100 p-4 flex items-center justify-between border-b">
-        <div className="flex items-center">
+      <div className="bg-gray-100 p-3 flex items-center justify-between border-b">
+        <div className="flex items-center overflow-hidden">
           <button
             className="md:hidden mr-2 text-gray-600"
             onClick={() => setSelectedChat(null)}
@@ -251,12 +250,12 @@ const ChatBox = () => {
           </button>
 
           {selectedChat.isGroupChat ? (
-            <div>
+            <div className="flex-1 min-w-0">
               {isEditing ? (
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    className="border p-1 rounded-md"
+                    className="border p-1 rounded-md w-full"
                     value={selectedChatName}
                     onChange={(e) => setSelectedChatName(e.target.value)}
                     onBlur={handleRenameGrp}
@@ -275,19 +274,19 @@ const ChatBox = () => {
                   </button>
                 </div>
               ) : (
-                <h3 className="font-semibold text-lg flex items-center gap-2">
+                <h3 className="font-semibold text-lg flex items-center gap-2 truncate">
                   {selectedChat?.chatName || "Group Chat"}
                   <AiOutlineEdit
-                    className="cursor-pointer text-gray-500 hover:text-black"
+                    className="cursor-pointer text-gray-500 hover:text-black flex-shrink-0"
                     onClick={() => setIsEditing(true)}
                     size={18}
                   />
                 </h3>
               )}
 
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500 truncate">
                 {selectedChat.users.length} members
-                <div>
+                <div className="truncate">
                   {selectedChat.users.map((u, index) => (
                     <span key={u._id} className="text-xs">
                       {u._id === user._id ? "You" : u.name}
@@ -298,16 +297,16 @@ const ChatBox = () => {
               </div>
             </div>
           ) : (
-            <div className="flex items-center">
+            <div className="flex items-center overflow-hidden">
               <img
                 src={
                   getSenderPic(selectedChat) ||
                   "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"
                 }
                 alt="Profile"
-                className="w-10 h-10 rounded-full mr-3"
+                className="w-8 h-8 md:w-10 md:h-10 rounded-full mr-2 md:mr-3 flex-shrink-0"
               />
-              <h3 className="font-semibold text-lg">
+              <h3 className="font-semibold text-lg truncate">
                 {getSenderName(selectedChat)}
               </h3>
             </div>
@@ -316,14 +315,14 @@ const ChatBox = () => {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
+      <div className="flex-1 p-2 md:p-4 overflow-y-auto bg-gray-50">
         {loading ? (
           <div className="flex justify-center p-4">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500"></div>
           </div>
         ) : (
-          <div className="space-y-4">
-            {messages.map((message, index) => (
+          <div className="space-y-2 md:space-y-4">
+            {messages.map((message) => (
               <div
                 key={message._id}
                 className={`flex ${
@@ -333,7 +332,7 @@ const ChatBox = () => {
                 }`}
               >
                 <div
-                  className={`max-w-xs md:max-w-md lg:max-w-lg rounded-lg px-4 py-2 ${
+                  className={`max-w-[75%] rounded-lg px-3 py-2 ${
                     message.sender._id === user._id
                       ? "bg-blue-500 text-white rounded-br-none"
                       : "bg-gray-200 text-gray-800 rounded-bl-none"
@@ -349,10 +348,10 @@ const ChatBox = () => {
                     )
                   ) : null}
 
-                  <div className="flex justify-end items-center gap-8">
+                  <div className="break-words flex justify-end items-center gap-2">
                     {message.content}
                     <div
-                      className={`text-xs mt-1 ${
+                      className={`text-xs text-right mt-1 ${
                         message.sender._id === user._id
                           ? "text-blue-100"
                           : "text-gray-500"
@@ -383,21 +382,21 @@ const ChatBox = () => {
       </div>
 
       {/* Message Input */}
-      <form onSubmit={sendMessage} className="p-4 border-t">
+      <form onSubmit={sendMessage} className="p-2 md:p-4 border-t">
         <div className="flex items-center">
           <input
             type="text"
             value={newMessage}
             onChange={typingHandler}
             placeholder="Type a message..."
-            className="flex-1 border rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            className="flex-1 border rounded-l-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
           />
           <button
             type="submit"
             disabled={!newMessage.trim()}
-            className="bg-blue-500 text-white rounded-r-lg px-4 py-2 disabled:bg-blue-300"
+            className="bg-blue-500 text-white rounded-r-lg px-3 py-2 disabled:bg-blue-300"
           >
-            <IoSend size={20} />
+            <IoSend size={18} />
           </button>
         </div>
       </form>

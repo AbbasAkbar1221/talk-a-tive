@@ -5,15 +5,21 @@ import MyChats from "../components/Chats/MyChats";
 import ChatBox from "../components/Chats/ChatBox";
 
 const Chatpage = () => {
-  const {user} = ChatState();
+  const { user, selectedChat } = ChatState();
 
-  return <div style={{ width: "100%"}}>
-        {user && <SideDrawer/>}
-        <div className="flex justify-between w-[100%] h-[91vh] p-10">
-          {user && <MyChats/>}
-          {user && <ChatBox/>}
+  return (
+    <div className="w-full min-h-screen bg-gray-50">
+      {user && <SideDrawer />}
+      <div className="flex w-full h-[91vh] p-4 md:p-10">
+        <div className={`${selectedChat ? "hidden" : "block"} w-full md:block md:w-1/3`}>
+          {user && <MyChats />}
         </div>
-  </div>;
+        <div className={`${selectedChat ? "block" : "hidden"} w-full md:block md:w-2/3`}>
+          {user && <ChatBox />}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Chatpage;
